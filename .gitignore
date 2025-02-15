@@ -35,4 +35,4 @@
 .vscode
 
 # Config
-src/my_settings.h
+/src/my_settings.h
