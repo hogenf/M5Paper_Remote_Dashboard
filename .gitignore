@@ -33,3 +33,6 @@
 
 .pio
 .vscode
+
+# Config
+src/my_settings.h
