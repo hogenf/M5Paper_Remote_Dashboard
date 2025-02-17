@@ -7,13 +7,16 @@
 #define MY_SCREEN_WIDTH 540
 #define MY_SCREEN_HEIGHT 960
 
+const char *ssid = "eduroam";// Eduroam SSID
 
 // resolution of device is 960x540 (landscape format), no rotation
+M5EPD_Canvas wifiCanvas(&M5.EPD);
 M5EPD_Canvas timeCanvas(&M5.EPD);
 M5EPD_Canvas batteryCanvas(&M5.EPD);
 M5EPD_Canvas imageCanvas(&M5.EPD);
 
 char timeStrbuff[64];
+char wifiStrbuff[64];
 char batteryStrbuff[64];
 bool wokenByRTC;
 
@@ -46,6 +49,17 @@ void flushTime() {
     timeCanvas.pushCanvas(
         MY_SCREEN_WIDTH - timeCanvas.width() - 10,
         MY_SCREEN_HEIGHT - timeCanvas.height() - 10,
+        UPDATE_MODE_DU4);
+}
+
+void flushWifi() {
+    //sprintf(timeStrbuff, "%d/%02d/%02d %02d:%02d:%02d", rtcDate.year,
+    //        rtcDate.mon, rtcDate.day, rtcTime.hour, rtcTime.min, rtcTime.sec);
+
+    wifiCanvas.drawString(wifiStrbuff, 0, 0);
+    wifiCanvas.pushCanvas(
+        10,
+        MY_SCREEN_HEIGHT - wifiCanvas.height() - 50,
         UPDATE_MODE_DU4);
 }
 
@@ -141,7 +155,12 @@ void setup() {
     M5.RTC.setAlarmIRQ(-1);
     M5.RTC.setAlarmIRQ(RTC_Date(-1, -1, -1, -1), RTC_Time(-1, -1, -1)); // see https://github.com/m5stack/M5EPD/issues/26 why we need to use this version
 
-    WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD);
+    WiFi.disconnect(true);//disconnect form wifi to set new wifi connection
+    WiFi.mode(WIFI_STA);//init wifi mode
+    //WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD);
+
+    WiFi.begin(ssid,WPA2_AUTH_PEAP, EAP_IDENTITY, EAP_USERNAME, EAP_PASSWORD);
+
     int retry = 10; // try up to 5 seconds
     while (WiFi.status() != WL_CONNECTED && retry-- > 0) {
         delay(500);
@@ -157,9 +176,14 @@ void setup() {
         imageCanvas.drawJpgUrl(url);
         M5.EPD.Clear(true);
         imageCanvas.pushCanvas(0, 0, UPDATE_MODE_GC16);
+        sprintf(wifiStrbuff, "IP:%s, SSID:%s", WiFi.localIP().toString().c_str(), WiFi.SSID().c_str());
     } else {
+        sprintf(wifiStrbuff, "IP:%s, SSID:%s", WiFi.localIP().toString().c_str(), WiFi.SSID().c_str());
         M5.EPD.Clear(true);
     }
+    wifiCanvas.createCanvas(500, 35);
+    wifiCanvas.setTextFont(1);
+    wifiCanvas.setTextSize(3);
 
     WiFi.disconnect(true, true);
 
@@ -239,6 +263,7 @@ void loop() {
 
     flushTime();
     flushBattery();
+    flushWifi();
 
     // shut down and go to sleep. need to re-read time since the above could have taken some time
     int waitTimeSeconds = waitTimeToNextWakeupInSeconds();
