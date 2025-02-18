@@ -155,7 +155,7 @@ void setup() {
     M5.RTC.setAlarmIRQ(-1);
     M5.RTC.setAlarmIRQ(RTC_Date(-1, -1, -1, -1), RTC_Time(-1, -1, -1)); // see https://github.com/m5stack/M5EPD/issues/26 why we need to use this version
 
-    WiFi.disconnect(true);//disconnect form wifi to set new wifi connection
+    WiFi.disconnect(true, true);//disconnect form wifi to set new wifi connection
     WiFi.mode(WIFI_STA);//init wifi mode
     //WiFi.begin(MY_WIFI_SSID, MY_WIFI_PASSWORD);
 
@@ -163,10 +163,10 @@ void setup() {
 
     int retry = 10; // try up to 5 seconds
     while (WiFi.status() != WL_CONNECTED && retry-- > 0) {
-        delay(500);
+        delay(2000);
         Serial.print(".");
     }
-
+    delay(500);
     setupTime(); // sync NTP time if required and connected
 
     if (WiFi.status() == WL_CONNECTED) {    
@@ -185,7 +185,7 @@ void setup() {
     wifiCanvas.setTextFont(1);
     wifiCanvas.setTextSize(3);
 
-    WiFi.disconnect(true, true);
+    //WiFi.disconnect(true, true);
 
     timeCanvas.createCanvas(260, 35);
     timeCanvas.setTextFont(1);
